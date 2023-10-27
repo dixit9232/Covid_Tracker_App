@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:covid_tracker_app/model/AllCountryDataModel.dart';
 import 'package:covid_tracker_app/url/app_api.dart';
 import 'package:covid_tracker_app/view/country_list.dart';
@@ -7,7 +8,6 @@ import 'package:covid_tracker_app/view/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
-import 'package:internet_connectivity_checker/internet_connectivity_checker.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     var response = await http.get(url);
     if (response.statusCode == 200) {
       m = jsonDecode(response.body);
-      print(jsonDecode(response.body));
       return jsonDecode(response.body);
     } else {
       throw Exception('Please Check Internet');
@@ -44,22 +43,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // TODO: implement dispose
     super.dispose();
   }
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setState(() {
-
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     var h = MediaQuery.of(context).size.height;
     var w = MediaQuery.of(context).size.width;
-    return ConnectivityBuilder(interval: Duration(hours: 24),
-      builder: (status) {
-        if (status == ConnectivityStatus.online) {
+    return StreamBuilder(
+      stream: Connectivity().onConnectivityChanged,
+      builder: (context, snapshot) {
+        print(snapshot.data);
+        if (snapshot.data==ConnectivityResult.none) {
+          return NoInternet();
+
+        } else {
           return Scaffold(
             body: SafeArea(
                 child: Padding(
@@ -67,9 +63,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: FutureBuilder(
                       future: GetAllCountriesData(),
                       builder: (context, snapshot) {
-                        print(snapshot.connectionState);
                         AllCountryDataModel allCountryDataModel =
-                            AllCountryDataModel.fromJson(m);
+                        AllCountryDataModel.fromJson(m);
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           return Center(
@@ -82,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           return Column(
                             children: [
                               SizedBox(
-                                height: h * 0.02,
+                                height: h * 0.05,
                               ),
                               PieChart(
                                 colorList: ColorList,
@@ -107,9 +102,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               Card(
                                 child: Column(
                                   children: [
-                                    SizedBox(
-                                      height: h * 0.02,
-                                    ),
                                     ReusableRow.name("Total Cases",
                                         allCountryDataModel.cases.toString()),
                                     ReusableRow.name(
@@ -142,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                               SizedBox(
-                                height: h * 0.03,
+                                height: h * 0.015,
                               ),
                               ElevatedButton(
                                   style: ButtonStyle(
@@ -153,10 +145,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   onPressed: () {
                                     Navigator.pushAndRemoveUntil(context,
                                         MaterialPageRoute(
-                                      builder: (context) {
-                                        return CountryList();
-                                      },
-                                    ), (route) => true);
+                                          builder: (context) {
+                                            return CountryList();
+                                          },
+                                        ), (route) => true);
                                   },
                                   child: Text("Track Countries"))
                             ],
@@ -165,16 +157,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       },
                     ))),
           );
-        } else if(status==ConnectivityStatus.offline){
-          return NoInternet();
-        }
-        else{
-        return  CheckInternet();
         }
       },
     );
   }
 }
+
 class NoInternet extends StatelessWidget {
   const NoInternet({super.key});
 
@@ -182,39 +170,28 @@ class NoInternet extends StatelessWidget {
   Widget build(BuildContext context) {
     var h = MediaQuery.of(context).size.height;
     var w = MediaQuery.of(context).size.width;
-    return Scaffold(body: SafeArea(child: Center(
-      child: Row(mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.signal_wifi_connected_no_internet_4,color: Colors.red.withOpacity(0.5),
-              size: h * 0.09,
-            ),
-            SizedBox(width: w*0.05,),
-            Text("No Internet Connection",textAlign: TextAlign.center,style: TextStyle(fontSize:20 ,color: Colors.grey.withOpacity(0.7)),)
-          ]),
-    )),);
-  }
-}
-
-class CheckInternet extends StatelessWidget {
-  const CheckInternet({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var h = MediaQuery.of(context).size.height;
-    var w = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SpinKitCircle(
-              color: Colors.green,
-              size: h * 0.1,),
-        ),
-      ),
+          child: Center(
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(
+            Icons.signal_wifi_connected_no_internet_4,
+            color: Colors.red.withOpacity(0.5),
+            size: h * 0.09,
+          ),
+          SizedBox(
+            width: w * 0.05,
+          ),
+          Text(
+            "No Internet Connection",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, color: Colors.grey.withOpacity(0.7)),
+          )
+        ]),
+      )),
     );
   }
 }
-
 
 class ReusableRow extends StatelessWidget {
   String title, value;
@@ -224,20 +201,17 @@ class ReusableRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var h = MediaQuery.of(context).size.height;
-    return Padding(
-      padding: const EdgeInsets.all(5),
-      child: Column(
-        children: [
-          Row(
+    return Column(crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [Text(title), Text(value)],
           ),
-          SizedBox(
-            height: h * 0.02,
-          ),
-          Divider()
-        ],
-      ),
+        ),
+        Divider()
+      ],
     );
   }
 }
