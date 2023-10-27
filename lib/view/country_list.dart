@@ -85,7 +85,7 @@ class _CountryListState extends State<CountryList> {
                                 child: ListView.builder(
                                   itemBuilder: (context, index) {
                                     return ListTile(
-                                      leading: Container(width: w*0.15,height: h*0.15,color: Colors.white),
+                                      leading: Container(width: w*0.17,height: h*0.15,color: Colors.white),
                                       title: Container(width: w*0.05,height: 20,color: Colors.white),
                                       subtitle: Container(width: w*0.7,height: 15,color: Colors.white),
                                     );
@@ -101,7 +101,7 @@ class _CountryListState extends State<CountryList> {
                                   return ListTile(onTap: () {
                                     Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) => CountryDetails(l[index]),), (route) => true);
                                   },
-                                    leading: Image.network(country.countryInfo!.flag.toString(),width: w*0.15,height: h*0.15),
+                                    leading: Image.network(country.countryInfo!.flag.toString(),width: w*0.17,height: h*0.15),
                                     title: Text(country.country.toString()),
                                     subtitle: Text(country.cases.toString()),
                                   );
@@ -110,7 +110,7 @@ class _CountryListState extends State<CountryList> {
                                   return ListTile(onTap: () {
                                     Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) => CountryDetails(l[index]),), (route) => true);
                                   },
-                                    leading: Image.network(country.countryInfo!.flag.toString(),width: w*0.15,height: h*0.15),
+                                    leading: Image.network(country.countryInfo!.flag.toString(),width: w*0.17,height: h*0.15),
                                     title: Text(country.country.toString()),
                                     subtitle: Text(country.cases.toString()),
                                   );
